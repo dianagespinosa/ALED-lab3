@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -135,8 +136,16 @@ public class FASTAReader {
 	 * pattern when one has been found to be different.
 	 */
 	private boolean compareImproved(byte[] pattern, int position) throws FASTAException {
-		// TODO
-		return false;
+		if (position + pattern.length > validBytes) {
+			throw new FASTAException("Pattern goes beyond the end of the file.");
+		}
+		
+		for(int i = 0; i < pattern.length; i++) {
+			if (pattern[i] != content[position + i]) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/*
@@ -148,8 +157,17 @@ public class FASTAReader {
 	 * ones present in the indicated position.
 	 */
 	private int compareNumErrors(byte[] pattern, int position) throws FASTAException {
-		// TODO
-		return -1;
+		if (position + pattern.length > validBytes) {
+			throw new FASTAException("Pattern goes beyond the end of the file.");
+		}
+		
+		int errores = 0;
+		for(int i = 0; i < pattern.length; i++) {
+			if(pattern[i] != content[position + i]) {
+				errores++;
+			}
+		}
+		return errores;
 	}
 
 	/**
@@ -162,8 +180,18 @@ public class FASTAReader {
 	 *         pattern in the data.
 	 */
 	public List<Integer> search(byte[] pattern) {
-		// TODO
-		return null;
+		List<Integer> coincidencias = new ArrayList<>();
+		
+		for(int i = 0; i < validBytes - 1; i++) {
+			try {
+				if(compareImproved(pattern,i)) {
+					coincidencias.add(i);
+				}
+			} catch (FASTAException e) {
+				break; //sé que mi patrón no va a estar ahí
+			}
+		}
+		return coincidencias;
 	}
 
 	/**
@@ -179,8 +207,20 @@ public class FASTAReader {
 	 *         pattern (with up to 1 errors) in the data.
 	 */
 	public List<Integer> searchSNV(byte[] pattern) {
-		// TODO
-		return null;
+		List<Integer> coincidencias = new ArrayList<>();
+		int pos = 0;
+		
+		while(pos < validBytes) {
+			try {
+				if(compareNumErrors(pattern,pos) <= 1) {
+					coincidencias.add(pos);
+				}
+				pos++;
+			} catch (FASTAException e) {
+				break;
+			}
+		}	
+		return coincidencias;
 	}
 
 	public static void main(String[] args) {
