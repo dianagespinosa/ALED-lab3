@@ -1,5 +1,6 @@
 package es.upm.dit.aled.lab3.binary;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,8 +79,39 @@ public class FASTAReaderSuffixes extends FASTAReader {
 	 */
 	@Override
 	public List<Integer> search(byte[] pattern) {
-		// TODO
-		return null;
+		//Inicialización de límites sobre el array de sufijos
+		int lo = 0; //Extremo inferior (posición del array)
+		int hi = suffixes.length-1; //Extremo superior (posición del array)
+		boolean found = false;
+		int index = 0; // Apunta al carácter del patrón que estamos evaluando
+		List<Integer> encontrado = new ArrayList<>();
+		
+		//Búsqueda binaria
+		while(lo <= hi && !found) { //El espacio de búsqueda es demasiado pequeño
+			int m = (lo + hi)/2; // Posición media en el diccionario de sufijos
+			int posSuffix = suffixes[m].suffixIndex; // Posición de inicio en el genoma real
+			
+			// ¿Coincide el carácter actual?
+			if(pattern[index] == content[posSuffix + index]) {
+				
+				// Si estamos en el último carácter del patrón y coincide
+				if (index == pattern.length-1) {
+				encontrado.add(posSuffix);
+				found = true;
+				} else { // Si aún no es el último, avanzamos al siguiente
+					index++;
+			}
+			} else if (pattern[index] < content[posSuffix + index]) {
+				//El patrón es alfabéticamente menor -> descartar mitad derecha
+				hi = m - 1; //Desplazamos el limite superior
+				index = 0; //Reiniciar comparación desde el primer caracter
+			} else { 
+				//El patrón es alfabéticamente mayor -> descartar mitad izquierda
+				lo = m + 1; //Desplazamos el límite inferior
+				index = 0; //Reiniciar comparación
+			}
+		}
+		return encontrado;
 	}
 
 	public static void main(String[] args) {
